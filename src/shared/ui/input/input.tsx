@@ -1,6 +1,6 @@
+import { cn } from "@/shared/lib"
 import * as React from "react"
 import { forwardRef } from "react"
-import { cn } from "../../lib/cn"
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string
