@@ -7,6 +7,8 @@ import type { Post, PostsResponse, CreatePostDto, UpdatePostDto } from "../model
 export interface FetchPostsParams {
   limit?: number
   skip?: number
+  sortBy?: string
+  order?: "asc" | "desc"
 }
 
 /**
@@ -17,8 +19,14 @@ export const postApi = {
    * 게시물 목록 조회
    */
   async fetchPosts(params: FetchPostsParams = {}): Promise<PostsResponse> {
-    const { limit = 10, skip = 0 } = params
-    return http.get<PostsResponse>(`/api/posts?limit=${limit}&skip=${skip}`, "게시물 목록을 불러오는데 실패했습니다")
+    const { limit = 10, skip = 0, sortBy, order } = params
+
+    // 쿼리 파라미터 구성
+    let url = `/api/posts?limit=${limit}&skip=${skip}`
+    if (sortBy) url += `&sortBy=${sortBy}`
+    if (order) url += `&order=${order}`
+
+    return http.get<PostsResponse>(url, "게시물 목록을 불러오는데 실패했습니다")
   },
 
   /**
