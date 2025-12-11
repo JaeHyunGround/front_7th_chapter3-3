@@ -19,16 +19,24 @@ export const useAddComment = () => {
       // 2. 이전 캐시 스냅샷 저장
       const previousComments = queryClient.getQueryData<CommentsResponse>(queryKey)
 
-      // 3. Users 캐시에서 현재 사용자 정보 가져오기
+      // 3. 현재 캐시에서 최대 ID 찾기
+      let maxId = 340 // dummyjson의 실제 최대 댓글 ID
+      if (previousComments?.comments && previousComments.comments.length > 0) {
+        const cacheMaxId = Math.max(...previousComments.comments.map((c) => c.id))
+        maxId = Math.max(maxId, cacheMaxId)
+      }
+      const tempId = maxId + 1 // 최대 ID + 1 (341부터 시작)
+
+      // 4. Users 캐시에서 현재 사용자 정보 가져오기
       const usersData = queryClient.getQueryData<UsersResponse>(["users", "list"])
       const currentUser = usersData?.users.find((u) => u.id === variables.userId)
 
-      // 4. 낙관적으로 캐시 업데이트 (새 댓글 추가)
+      // 5. 낙관적으로 캐시 업데이트 (새 댓글 추가)
       queryClient.setQueryData<CommentsResponse>(queryKey, (old) => {
         if (!old) return old
 
         const tempComment: Comment = {
-          id: Date.now(),
+          id: tempId,
           body: variables.body,
           postId: variables.postId,
           userId: variables.userId,
@@ -47,7 +55,7 @@ export const useAddComment = () => {
         }
       })
 
-      // 4. context 반환 (rollback용)
+      // 6. context 반환 (rollback용)
       return { previousComments }
     },
 

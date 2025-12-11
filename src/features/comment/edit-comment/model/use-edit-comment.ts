@@ -10,7 +10,8 @@ export const useEditComment = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCommentDto; postId: number }) => {
       // 임시 ID(낙관적으로 추가된 댓글)인 경우 서버 요청 스킵
-      if (id > 1000000000000) {
+      // dummyjson의 실제 최대 댓글 ID는 340이므로, 341 이상은 모두 임시 댓글
+      if (id > 340) {
         return Promise.resolve({ id, body: data.body, postId: 0, userId: 0, user: { id: 0, username: "" }, likes: 0 })
       }
       return commentApi.updateComment(id, data)
