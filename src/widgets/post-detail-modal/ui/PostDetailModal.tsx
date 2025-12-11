@@ -60,9 +60,9 @@ export const PostDetailModal = ({ post, isOpen, onClose, searchQuery = "" }: Pos
   }
 
   const handleEditComment = () => {
-    if (!selectedComment) return
+    if (!selectedComment || !post) return
     editComment(
-      { id: selectedComment.id, data: editCommentForm },
+      { id: selectedComment.id, data: editCommentForm, postId: post.id },
       {
         onSuccess: () => {
           closeEditCommentDialog()

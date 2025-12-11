@@ -1,17 +1,48 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { commentApi } from "@/entities/comment"
+import { commentApi, type CommentsResponse } from "@/entities/comment"
 
 /**
- * 댓글 삭제 훅
+ * 댓글 삭제 훅 (낙관적 업데이트)
  */
 export const useDeleteComment = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id }: { id: number; postId: number }) => commentApi.deleteComment(id),
-    onSuccess: (_, variables) => {
-      // 해당 게시물의 댓글 목록 캐시 무효화
-      queryClient.invalidateQueries({ queryKey: ["comments", "list", variables.postId] })
+    mutationFn: ({ id }: { id: number; postId: number }) => {
+      // 임시 ID(낙관적으로 추가된 댓글)인 경우 서버 요청 스킵
+      if (id > 1000000000000) {
+        return Promise.resolve()
+      }
+      return commentApi.deleteComment(id)
+    },
+    onMutate: async (variables) => {
+      const queryKey = ["comments", "list", variables.postId]
+
+      // 1. 진행 중인 refetch 취소
+      await queryClient.cancelQueries({ queryKey })
+
+      // 2. 이전 캐시 스냅샷 저장
+      const previousComments = queryClient.getQueryData<CommentsResponse>(queryKey)
+
+      // 3. 낙관적으로 캐시 업데이트 (해당 댓글 제거)
+      queryClient.setQueryData<CommentsResponse>(queryKey, (old) => {
+        if (!old) return old
+
+        return {
+          ...old,
+          comments: old.comments.filter((comment) => comment.id !== variables.id),
+          total: old.total - 1, // total 카운트도 감소
+        }
+      })
+
+      // 4. context 반환 (rollback용)
+      return { previousComments }
+    },
+    onError: (_error, variables, context) => {
+      // 에러 시 이전 상태로 롤백
+      if (context?.previousComments) {
+        queryClient.setQueryData(["comments", "list", variables.postId], context.previousComments)
+      }
     },
   })
 }
