@@ -1,4 +1,4 @@
-import { Edit2, MessageSquare, Plus, Search, Trash2 } from "lucide-react"
+import { Edit2, MessageSquare, Plus, Search } from "lucide-react"
 import {
   Button,
   Card,
@@ -42,13 +42,26 @@ import { PostDetailModal } from "@/widgets/post-detail-modal"
 import { UserDetailModal } from "@/widgets/user-detail-modal"
 import { useState, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
+import { DeletePostButton } from "@/features/post/delete-post/ui/delete-post-button"
 
 export const PostsTable = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Features - 필터 상태
-  const { skip, limit, sortBy, order, searchQuery, selectedTag, setSkip, setLimit, setSortBy, setOrder, setSearchQuery, setSelectedTag } =
-    usePostsFilterStore()
+  const {
+    skip,
+    limit,
+    sortBy,
+    order,
+    searchQuery,
+    selectedTag,
+    setSkip,
+    setLimit,
+    setSortBy,
+    setOrder,
+    setSearchQuery,
+    setSelectedTag,
+  } = usePostsFilterStore()
 
   // URL 쿼리 파라미터 동기화
   useEffect(() => {
@@ -220,10 +233,7 @@ export const PostsTable = () => {
               </SelectContent>
             </Select>
 
-            <Select
-              value={sortBy || "none"}
-              onValueChange={(value) => setSortBy(value === "none" ? "" : value)}
-            >
+            <Select value={sortBy || "none"} onValueChange={(value) => setSortBy(value === "none" ? "" : value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="정렬 기준" />
               </SelectTrigger>
@@ -284,9 +294,7 @@ export const PostsTable = () => {
                         <Button variant="ghost" size="sm" onClick={() => handleOpenEditDialog(post)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <DeletePostButton handleDeletePost={() => handleDeletePost(post.id)} />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -350,11 +358,7 @@ export const PostsTable = () => {
       />
 
       {/* 사용자 상세 모달 */}
-      <UserDetailModal
-        userId={selectedUserId}
-        isOpen={isUserDetailModalOpen}
-        onClose={handleCloseUserDetail}
-      />
+      <UserDetailModal userId={selectedUserId} isOpen={isUserDetailModalOpen} onClose={handleCloseUserDetail} />
     </Card>
   )
 }
