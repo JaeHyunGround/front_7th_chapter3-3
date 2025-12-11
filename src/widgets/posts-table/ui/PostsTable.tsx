@@ -1,4 +1,4 @@
-import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
+import { Edit2, MessageSquare, Plus, Search, Trash2 } from "lucide-react"
 import {
   Button,
   Card,
@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  Pagination,
   Select,
   SelectContent,
   SelectItem,
@@ -21,17 +22,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Textarea,
 } from "@/shared/ui"
 import { highlightText } from "@/shared/lib"
-import { type Post } from "@/entities/post"
+import { type Post, PostTags, PostAuthor, PostReactionsUI } from "@/entities/post"
 import {
   usePostsList,
   usePostsFilterStore,
   useAddPost,
   useAddPostDialog,
+  AddPostForm,
   useEditPost,
   useEditPostDialog,
+  EditPostForm,
   useDeletePost,
 } from "@/features/post"
 import { useUsersList } from "@/features/user"
@@ -265,39 +267,14 @@ export const PostsTable = () => {
                     <TableCell>
                       <div className="space-y-1">
                         <div>{highlightText(post.title, searchQuery)}</div>
-                        <div className="flex flex-wrap gap-1">
-                          {post.tags?.map((tag) => (
-                            <span
-                              key={tag}
-                              className={`px-1 text-[9px] font-semibold rounded-[4px] cursor-pointer ${
-                                selectedTag === tag
-                                  ? "text-white bg-blue-500 hover:bg-blue-600"
-                                  : "text-blue-800 bg-blue-100 hover:bg-blue-200"
-                              }`}
-                              onClick={() => setSelectedTag(tag)}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                        <PostTags tags={post.tags || []} selectedTag={selectedTag} onTagClick={setSelectedTag} />
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div
-                        className="flex items-center space-x-2 cursor-pointer"
-                        onClick={() => post.author && handleOpenUserDetail(post.author.id)}
-                      >
-                        <img src={post.author?.image} alt={post.author?.username} className="w-8 h-8 rounded-full" />
-                        <span>{post.author?.username}</span>
-                      </div>
+                      <PostAuthor author={post.author} onClick={handleOpenUserDetail} />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>{post.reactions?.likes || 0}</span>
-                        <ThumbsDown className="w-4 h-4" />
-                        <span>{post.reactions?.dislikes || 0}</span>
-                      </div>
+                      <PostReactionsUI reactions={post.reactions} />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -319,30 +296,13 @@ export const PostsTable = () => {
           )}
 
           {/* 페이지네이션 */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span>표시</span>
-              <Select value={limit.toString()} onValueChange={(value) => setLimit(Number(value))}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="10" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="30">30</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>항목</span>
-            </div>
-            <div className="flex gap-2">
-              <Button disabled={skip === 0} onClick={() => setSkip(Math.max(0, skip - limit))}>
-                이전
-              </Button>
-              <Button disabled={skip + limit >= (postsData?.total || 0)} onClick={() => setSkip(skip + limit)}>
-                다음
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            skip={skip}
+            limit={limit}
+            total={postsData?.total || 0}
+            onSkipChange={setSkip}
+            onLimitChange={setLimit}
+          />
         </div>
       </CardContent>
 
@@ -352,35 +312,16 @@ export const PostsTable = () => {
           <DialogHeader>
             <DialogTitle>새 게시물 추가</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="제목"
-              value={newPostForm.title}
-              onChange={(e) => setNewPostForm({ ...newPostForm, title: e.target.value })}
-            />
-            <Textarea
-              rows={10}
-              placeholder="내용"
-              value={newPostForm.body}
-              onChange={(e) => setNewPostForm({ ...newPostForm, body: e.target.value })}
-            />
-            <Select
-              value={newPostForm.userId.toString()}
-              onValueChange={(value) => setNewPostForm({ ...newPostForm, userId: Number(value) })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="작성자 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {usersData?.users.map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.username}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAddPost}>게시물 추가</Button>
-          </div>
+          <AddPostForm
+            title={newPostForm.title}
+            body={newPostForm.body}
+            userId={newPostForm.userId}
+            users={usersData?.users || []}
+            onTitleChange={(title: string) => setNewPostForm({ ...newPostForm, title })}
+            onBodyChange={(body: string) => setNewPostForm({ ...newPostForm, body })}
+            onUserIdChange={(userId: number) => setNewPostForm({ ...newPostForm, userId })}
+            onSubmit={handleAddPost}
+          />
         </DialogContent>
       </Dialog>
 
@@ -390,20 +331,13 @@ export const PostsTable = () => {
           <DialogHeader>
             <DialogTitle>게시물 수정</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="제목"
-              value={editPostForm.title}
-              onChange={(e) => setEditPostForm({ ...editPostForm, title: e.target.value })}
-            />
-            <Textarea
-              rows={10}
-              placeholder="내용"
-              value={editPostForm.body}
-              onChange={(e) => setEditPostForm({ ...editPostForm, body: e.target.value })}
-            />
-            <Button onClick={handleEditPost}>게시물 업데이트</Button>
-          </div>
+          <EditPostForm
+            title={editPostForm.title}
+            body={editPostForm.body}
+            onTitleChange={(title: string) => setEditPostForm({ ...editPostForm, title })}
+            onBodyChange={(body: string) => setEditPostForm({ ...editPostForm, body })}
+            onSubmit={handleEditPost}
+          />
         </DialogContent>
       </Dialog>
 

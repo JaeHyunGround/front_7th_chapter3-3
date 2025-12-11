@@ -1,21 +1,16 @@
-import { Edit2, Plus, ThumbsUp, Trash2 } from "lucide-react"
 import { useState, useEffect } from "react"
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  Textarea,
-} from "@/shared/ui"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui"
 import { highlightText } from "@/shared/lib"
 import { type Post } from "@/entities/post"
+import { CommentList } from "@/entities/comment"
 import {
   useCommentsList,
   useAddComment,
   useAddCommentDialog,
+  AddCommentForm,
   useEditComment,
   useEditCommentDialog,
+  EditCommentForm,
   useDeleteComment,
   useLikeComment,
 } from "@/features/comment"
@@ -113,49 +108,14 @@ export const PostDetailModal = ({ post, isOpen, onClose, searchQuery = "" }: Pos
             <p>{highlightText(post.body, searchQuery)}</p>
 
             {/* 댓글 섹션 */}
-            <div className="mt-2">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold">댓글</h3>
-                <Button size="sm" onClick={handleOpenAddCommentDialog}>
-                  <Plus className="w-3 h-3 mr-1" />
-                  댓글 추가
-                </Button>
-              </div>
-              <div className="space-y-1">
-                {commentsData?.comments.map((comment) => (
-                  <div key={comment.id} className="flex items-center justify-between text-sm border-b pb-1">
-                    <div className="flex items-center space-x-2 overflow-hidden">
-                      <span className="font-medium truncate">{comment.user.username}:</span>
-                      <span className="truncate">{highlightText(comment.body, searchQuery)}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleLikeComment(comment.id, comment.likes)}
-                      >
-                        <ThumbsUp className="w-3 h-3" />
-                        <span className="ml-1 text-xs">{comment.likes}</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenEditCommentDialog(comment)}
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteComment(comment.id)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <CommentList
+              comments={commentsData?.comments || []}
+              searchQuery={searchQuery}
+              onAdd={handleOpenAddCommentDialog}
+              onEdit={handleOpenEditCommentDialog}
+              onDelete={handleDeleteComment}
+              onLike={handleLikeComment}
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -166,14 +126,11 @@ export const PostDetailModal = ({ post, isOpen, onClose, searchQuery = "" }: Pos
           <DialogHeader>
             <DialogTitle>새 댓글 추가</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="댓글 내용"
-              value={newCommentForm.body}
-              onChange={(e) => setNewCommentForm({ ...newCommentForm, body: e.target.value })}
-            />
-            <Button onClick={handleAddComment}>댓글 추가</Button>
-          </div>
+          <AddCommentForm
+            body={newCommentForm.body}
+            onBodyChange={(body: string) => setNewCommentForm({ ...newCommentForm, body })}
+            onSubmit={handleAddComment}
+          />
         </DialogContent>
       </Dialog>
 
@@ -183,14 +140,11 @@ export const PostDetailModal = ({ post, isOpen, onClose, searchQuery = "" }: Pos
           <DialogHeader>
             <DialogTitle>댓글 수정</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="댓글 내용"
-              value={editCommentForm.body}
-              onChange={(e) => setEditCommentForm({ ...editCommentForm, body: e.target.value })}
-            />
-            <Button onClick={handleEditComment}>댓글 업데이트</Button>
-          </div>
+          <EditCommentForm
+            body={editCommentForm.body}
+            onBodyChange={(body: string) => setEditCommentForm({ ...editCommentForm, body })}
+            onSubmit={handleEditComment}
+          />
         </DialogContent>
       </Dialog>
     </>

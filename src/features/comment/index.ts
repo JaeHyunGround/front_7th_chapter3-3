@@ -1,5 +1,5 @@
 export { useCommentsList } from "./comments-list"
-export { useAddComment, useAddCommentDialog } from "./add-comment"
-export { useEditComment, useEditCommentDialog } from "./edit-comment"
+export { useAddComment, useAddCommentDialog, AddCommentForm } from "./add-comment"
+export { useEditComment, useEditCommentDialog, EditCommentForm } from "./edit-comment"
 export { useDeleteComment } from "./delete-comment"
 export { useLikeComment } from "./like-comment"

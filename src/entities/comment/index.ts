@@ -7,3 +7,4 @@ export type {
   UpdateCommentDto,
   UpdateCommentLikesDto,
 } from "./model/types"
+export { CommentItem, CommentList } from "./ui"
