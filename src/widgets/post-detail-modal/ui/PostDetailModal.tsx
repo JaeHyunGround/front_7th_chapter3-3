@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui"
 import { highlightText } from "@/shared/lib"
 import { type Post } from "@/entities/post"
@@ -37,13 +37,6 @@ export const PostDetailModal = ({ post, isOpen, onClose, searchQuery = "" }: Pos
   // Local state for forms
   const [newCommentForm, setNewCommentForm] = useState({ body: "", postId: 0, userId: 1 })
   const [editCommentForm, setEditCommentForm] = useState({ body: "" })
-
-  // Reset form when dialog opens with new post
-  useEffect(() => {
-    if (post) {
-      setNewCommentForm({ body: "", postId: post.id, userId: 1 })
-    }
-  }, [post])
 
   // Handlers
   const handleOpenAddCommentDialog = () => {
