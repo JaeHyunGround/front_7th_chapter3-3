@@ -1,5 +1,5 @@
-import { Button } from "./button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
+import { Button } from "../button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
 
 interface PaginationProps {
   skip: number
