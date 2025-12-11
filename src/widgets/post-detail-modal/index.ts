@@ -1,1 +1,1 @@
-export { PostDetailModal } from "./ui/PostDetailModal"
+export { PostDetailModal } from "./ui/post-detail-modal"

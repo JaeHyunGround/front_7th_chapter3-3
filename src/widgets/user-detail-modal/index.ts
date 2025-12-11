@@ -1,1 +1,1 @@
-export { UserDetailModal } from "./ui/UserDetailModal"
+export { UserDetailModal } from "./ui/user-detail-modal"
