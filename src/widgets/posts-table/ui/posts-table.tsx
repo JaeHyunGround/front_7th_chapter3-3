@@ -34,8 +34,9 @@ import {
   useEditPostDialog,
   EditPostForm,
   useDeletePost,
+  usePostDetailDialog,
 } from "@/features/post"
-import { useUsersList } from "@/features/user"
+import { useUsersList, useUserDetailDialog } from "@/features/user"
 import { useTagsList } from "@/features/tag"
 import { PostDetailModal } from "@/widgets/post-detail-modal"
 import { UserDetailModal } from "@/widgets/user-detail-modal"
@@ -46,7 +47,6 @@ import { DeletePostButton } from "@/features/post/delete-post/ui/delete-post-but
 export const PostsTable = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // URL에서 필터 상태 읽기 (Single Source of Truth)
   const skip = parseInt(searchParams.get("skip") || "0")
   const limit = parseInt(searchParams.get("limit") || "10")
   const sortBy = searchParams.get("sortBy") || ""
@@ -54,7 +54,6 @@ export const PostsTable = () => {
   const searchQuery = searchParams.get("search") || ""
   const selectedTag = searchParams.get("tag") || ""
 
-  // URL 업데이트 헬퍼 함수
   const updateSearchParams = (updates: Record<string, string | number>) => {
     const params = new URLSearchParams(searchParams)
     Object.entries(updates).forEach(([key, value]) => {
@@ -74,42 +73,38 @@ export const PostsTable = () => {
   const setSearchQuery = (newQuery: string) => updateSearchParams({ search: newQuery, skip: 0 })
   const setSelectedTag = (newTag: string) => updateSearchParams({ tag: newTag, skip: 0 })
 
-  // Features - 데이터 조회
   const { data: postsData, isLoading } = usePostsList({ skip, limit, sortBy, order, searchQuery, selectedTag })
   const { data: usersData } = useUsersList()
   const { data: tagsData } = useTagsList()
 
-  // Features - CRUD
   const { mutate: addPost } = useAddPost()
   const { isOpen: isAddDialogOpen, open: openAddDialog, close: closeAddDialog } = useAddPostDialog()
   const { mutate: editPost } = useEditPost()
   const { isOpen: isEditDialogOpen, selectedPost, open: openEditDialog, close: closeEditDialog } = useEditPostDialog()
   const { mutate: deletePost } = useDeletePost()
 
-  // Local state for forms
+  const {
+    isOpen: isPostDetailModalOpen,
+    selectedPost: selectedPostForDetail,
+    open: openPostDetailModal,
+    close: closePostDetailModal,
+  } = usePostDetailDialog()
+  const {
+    isOpen: isUserDetailModalOpen,
+    selectedUserId,
+    open: openUserDetailModal,
+    close: closeUserDetailModal,
+  } = useUserDetailDialog()
+
   const [newPostForm, setNewPostForm] = useState({ title: "", body: "", userId: 1 })
   const [editPostForm, setEditPostForm] = useState({ title: "", body: "" })
 
-  // Local state for post detail modal
-  const [selectedPostForDetail, setSelectedPostForDetail] = useState<Post | null>(null)
-  const [isPostDetailModalOpen, setIsPostDetailModalOpen] = useState(false)
-
-  // Local state for user detail modal
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false)
-
-  // 게시물 + 작성자 정보 조합
   const postsWithUsers = postsData?.posts.map((post) => ({
     ...post,
     author: usersData?.users.find((user) => user.id === post.userId),
   }))
 
   // Handlers
-  const handleSearch = () => {
-    // searchQuery는 이미 store에 설정되어 있음
-    // usePostsList가 자동으로 리페치
-  }
-
   const handleAddPost = () => {
     addPost(newPostForm, {
       onSuccess: () => {
@@ -145,23 +140,11 @@ export const PostsTable = () => {
   }
 
   const handleOpenPostDetail = (post: Post) => {
-    setSelectedPostForDetail(post)
-    setIsPostDetailModalOpen(true)
-  }
-
-  const handleClosePostDetail = () => {
-    setIsPostDetailModalOpen(false)
-    setSelectedPostForDetail(null)
+    openPostDetailModal(post)
   }
 
   const handleOpenUserDetail = (userId: number) => {
-    setSelectedUserId(userId)
-    setIsUserDetailModalOpen(true)
-  }
-
-  const handleCloseUserDetail = () => {
-    setIsUserDetailModalOpen(false)
-    setSelectedUserId(null)
+    openUserDetailModal(userId)
   }
 
   return (
@@ -188,7 +171,6 @@ export const PostsTable = () => {
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 />
               </div>
             </div>
@@ -332,12 +314,12 @@ export const PostsTable = () => {
       <PostDetailModal
         post={selectedPostForDetail}
         isOpen={isPostDetailModalOpen}
-        onClose={handleClosePostDetail}
+        onClose={closePostDetailModal}
         searchQuery={searchQuery}
       />
 
       {/* 사용자 상세 모달 */}
-      <UserDetailModal userId={selectedUserId} isOpen={isUserDetailModalOpen} onClose={handleCloseUserDetail} />
+      <UserDetailModal userId={selectedUserId} isOpen={isUserDetailModalOpen} onClose={closeUserDetailModal} />
     </Card>
   )
 }
