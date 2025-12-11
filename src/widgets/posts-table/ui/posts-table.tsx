@@ -1,4 +1,4 @@
-import { Edit2, MessageSquare, Plus, Search } from "lucide-react"
+import { Plus } from "lucide-react"
 import {
   Button,
   Card,
@@ -9,22 +9,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  Input,
   Pagination,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/shared/ui"
-import { highlightText } from "@/shared/lib"
-import { type Post, PostTags, PostAuthor, PostReactionsUI } from "@/entities/post"
+import { type Post } from "@/entities/post"
 import {
   usePostsList,
   useAddPost,
@@ -40,9 +32,10 @@ import { useUsersList, useUserDetailDialog } from "@/features/user"
 import { useTagsList } from "@/features/tag"
 import { PostDetailModal } from "@/widgets/post-detail-modal"
 import { UserDetailModal } from "@/widgets/user-detail-modal"
+import { PostsFilterBar } from "./posts-filter-bar"
+import { PostTableRow } from "./post-table-row"
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { DeletePostButton } from "@/features/post/delete-post/ui/delete-post-button"
 
 export const PostsTable = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -139,14 +132,6 @@ export const PostsTable = () => {
     setEditPostForm({ title: post.title, body: post.body })
   }
 
-  const handleOpenPostDetail = (post: Post) => {
-    openPostDetailModal(post)
-  }
-
-  const handleOpenUserDetail = (userId: number) => {
-    openUserDetailModal(userId)
-  }
-
   return (
     <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
@@ -162,60 +147,17 @@ export const PostsTable = () => {
       <CardContent>
         <div className="flex flex-col gap-4">
           {/* 검색 및 필터 컨트롤 */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="게시물 검색..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <Select
-              value={selectedTag || "all"}
-              onValueChange={(value) => {
-                setSelectedTag(value === "all" ? "" : value)
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="태그 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">모든 태그</SelectItem>
-                {tagsData?.map((tag) => (
-                  <SelectItem key={tag.url} value={tag.slug}>
-                    {tag.slug}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy || "none"} onValueChange={(value) => setSortBy(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="정렬 기준" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">없음</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
-                <SelectItem value="title">제목</SelectItem>
-                <SelectItem value="reactions">반응</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={order} onValueChange={setOrder}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="정렬 순서" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">오름차순</SelectItem>
-                <SelectItem value="desc">내림차순</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <PostsFilterBar
+            searchQuery={searchQuery}
+            selectedTag={selectedTag}
+            sortBy={sortBy}
+            order={order}
+            tags={tagsData || []}
+            onSearchChange={setSearchQuery}
+            onTagChange={setSelectedTag}
+            onSortByChange={setSortBy}
+            onOrderChange={setOrder}
+          />
 
           {/* 게시물 테이블 */}
           {isLoading ? (
@@ -233,32 +175,17 @@ export const PostsTable = () => {
               </TableHeader>
               <TableBody>
                 {postsWithUsers?.map((post) => (
-                  <TableRow key={post.id}>
-                    <TableCell>{post.id}</TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div>{highlightText(post.title, searchQuery)}</div>
-                        <PostTags tags={post.tags || []} selectedTag={selectedTag} onTagClick={setSelectedTag} />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <PostAuthor author={post.author} onClick={handleOpenUserDetail} />
-                    </TableCell>
-                    <TableCell>
-                      <PostReactionsUI reactions={post.reactions} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenPostDetail(post)}>
-                          <MessageSquare className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenEditDialog(post)}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <DeletePostButton handleDeletePost={() => handleDeletePost(post.id)} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <PostTableRow
+                    key={post.id}
+                    post={post}
+                    searchQuery={searchQuery}
+                    selectedTag={selectedTag}
+                    onPostDetailClick={() => openPostDetailModal(post)}
+                    onEditClick={handleOpenEditDialog}
+                    onDeleteClick={handleDeletePost}
+                    onUserClick={() => openUserDetailModal(post.userId)}
+                    onTagClick={setSelectedTag}
+                  />
                 ))}
               </TableBody>
             </Table>
