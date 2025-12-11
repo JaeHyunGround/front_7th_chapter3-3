@@ -27,7 +27,6 @@ import { highlightText } from "@/shared/lib"
 import { type Post, PostTags, PostAuthor, PostReactionsUI } from "@/entities/post"
 import {
   usePostsList,
-  usePostsFilterStore,
   useAddPost,
   useAddPostDialog,
   AddPostForm,
@@ -40,60 +39,40 @@ import { useUsersList } from "@/features/user"
 import { useTagsList } from "@/features/tag"
 import { PostDetailModal } from "@/widgets/post-detail-modal"
 import { UserDetailModal } from "@/widgets/user-detail-modal"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { DeletePostButton } from "@/features/post/delete-post/ui/delete-post-button"
 
 export const PostsTable = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Features - 필터 상태
-  const {
-    skip,
-    limit,
-    sortBy,
-    order,
-    searchQuery,
-    selectedTag,
-    setSkip,
-    setLimit,
-    setSortBy,
-    setOrder,
-    setSearchQuery,
-    setSelectedTag,
-  } = usePostsFilterStore()
+  // URL에서 필터 상태 읽기 (Single Source of Truth)
+  const skip = parseInt(searchParams.get("skip") || "0")
+  const limit = parseInt(searchParams.get("limit") || "10")
+  const sortBy = searchParams.get("sortBy") || ""
+  const order = (searchParams.get("order") as "asc" | "desc") || "asc"
+  const searchQuery = searchParams.get("search") || ""
+  const selectedTag = searchParams.get("tag") || ""
 
-  // URL 쿼리 파라미터 동기화
-  useEffect(() => {
-    // 마운트 시 URL에서 필터 상태 복원
-    const urlSkip = searchParams.get("skip")
-    const urlLimit = searchParams.get("limit")
-    const urlSearch = searchParams.get("search")
-    const urlSortBy = searchParams.get("sortBy")
-    const urlOrder = searchParams.get("order")
-    const urlTag = searchParams.get("tag")
-
-    if (urlSkip) setSkip(parseInt(urlSkip))
-    if (urlLimit) setLimit(parseInt(urlLimit))
-    if (urlSearch) setSearchQuery(urlSearch)
-    if (urlSortBy) setSortBy(urlSortBy)
-    if (urlOrder) setOrder(urlOrder as "asc" | "desc")
-    if (urlTag) setSelectedTag(urlTag)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // 필터 상태 변경 시 URL 업데이트
-  useEffect(() => {
-    const params = new URLSearchParams()
-    if (skip) params.set("skip", skip.toString())
-    if (limit !== 10) params.set("limit", limit.toString())
-    if (searchQuery) params.set("search", searchQuery)
-    if (sortBy) params.set("sortBy", sortBy)
-    if (order !== "asc") params.set("order", order)
-    if (selectedTag) params.set("tag", selectedTag)
-
+  // URL 업데이트 헬퍼 함수
+  const updateSearchParams = (updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams)
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === "" || value === 0 || (key === "limit" && value === 10) || (key === "order" && value === "asc")) {
+        params.delete(key)
+      } else {
+        params.set(key, value.toString())
+      }
+    })
     setSearchParams(params, { replace: true })
-  }, [skip, limit, searchQuery, sortBy, order, selectedTag, setSearchParams])
+  }
+
+  const setSkip = (newSkip: number) => updateSearchParams({ skip: newSkip })
+  const setLimit = (newLimit: number) => updateSearchParams({ limit: newLimit, skip: 0 })
+  const setSortBy = (newSortBy: string) => updateSearchParams({ sortBy: newSortBy })
+  const setOrder = (newOrder: "asc" | "desc") => updateSearchParams({ order: newOrder })
+  const setSearchQuery = (newQuery: string) => updateSearchParams({ search: newQuery, skip: 0 })
+  const setSelectedTag = (newTag: string) => updateSearchParams({ tag: newTag, skip: 0 })
 
   // Features - 데이터 조회
   const { data: postsData, isLoading } = usePostsList({ skip, limit, sortBy, order, searchQuery, selectedTag })
