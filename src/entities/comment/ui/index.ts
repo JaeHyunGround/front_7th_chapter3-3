@@ -1,2 +1,2 @@
-export { CommentItem } from "./CommentItem"
-export { CommentList } from "./CommentList"
+export { CommentItem } from "./comment-item"
+export { CommentList } from "./comment-list"

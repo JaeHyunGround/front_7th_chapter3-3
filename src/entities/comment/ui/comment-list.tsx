@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react"
 import { Button } from "@/shared/ui"
 import { Comment } from "../model/types"
-import { CommentItem } from "./CommentItem"
+import { CommentItem } from "./comment-item"
 
 interface CommentListProps {
   comments: Comment[]

@@ -22,7 +22,7 @@ export const useCommentsList = ({ postId }: UseCommentsListParams) => {
           comments: [],
           total: 0,
           skip: 0,
-          limit: 30,
+          limit: 0,
         })
       }
       return commentApi.fetchCommentsByPostId(postId)

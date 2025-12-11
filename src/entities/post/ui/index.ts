@@ -1,3 +1,3 @@
-export { PostTags } from "./PostTags"
-export { PostAuthor } from "./PostAuthor"
-export { PostReactions } from "./PostReactions"
+export { PostTags } from "./post-tags"
+export { PostAuthor } from "./post-author"
+export { PostReactions } from "./post-reactions"

@@ -1,1 +1,1 @@
-export { AddCommentForm } from "./AddCommentForm"
+export { AddCommentForm } from "./add-comment-form"

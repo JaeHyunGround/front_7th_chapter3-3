@@ -1,1 +1,1 @@
-export { AddPostForm } from "./AddPostForm"
+export { AddPostForm } from "./add-post-form"
